@@ -1,0 +1,32 @@
+
+services:
+  api:
+    build: .
+    container_name: fundflow-api-container
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - redis
+
+  celery:
+    build: .
+    container_name: fundflow-celery-worker
+    command: ["celery", "-A", "config", "worker", "--pool=solo", "--loglevel=info"]
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    container_name: fundflow-redis
+    ports:
+      - "6379:6379"
