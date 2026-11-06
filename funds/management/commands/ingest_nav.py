@@ -1,8 +1,10 @@
 
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
 
+import boto3
 import pandas as pd
-from django.conf import settings
+
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -10,17 +12,22 @@ from funds.models import Scheme, NavRecord
 
 
 class Command(BaseCommand):
-    help = "Import mutual fund NAV records from a CSV file"
+    help = "Import mutual fund NAV records from S3 CSV file"
 
     def handle(self, *args, **options):
-        csv_path = settings.BASE_DIR / "data" / "mutual_fund_nav.csv"
+        s3 = boto3.client("s3", region_name="eu-north-1")
 
         try:
-            df = pd.read_csv(csv_path)
-        except FileNotFoundError:
-            raise CommandError(f"CSV file not found: {csv_path}")
+            response = s3.get_object(
+                Bucket="fundflow-bhagvat-storage-2026-unique",
+                Key="fundflow/nav/mutual_fund_nav.csv",
+            )
+            df = pd.read_csv(BytesIO(response["Body"].read()))
+
         except Exception as exc:
-            raise CommandError(f"Could not read CSV: {exc}")
+            raise CommandError(
+                f"Could not read CSV from S3: {exc}"
+            )
 
         required_columns = {"scheme_name", "nav_date", "nav"}
 
