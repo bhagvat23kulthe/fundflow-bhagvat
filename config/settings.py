@@ -11,6 +11,9 @@ import os
 
 load_dotenv()
 
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "eu-north-1")
+
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 

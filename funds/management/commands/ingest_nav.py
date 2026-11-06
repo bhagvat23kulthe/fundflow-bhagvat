@@ -5,6 +5,7 @@ from io import BytesIO
 import boto3
 import pandas as pd
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -15,11 +16,14 @@ class Command(BaseCommand):
     help = "Import mutual fund NAV records from S3 CSV file"
 
     def handle(self, *args, **options):
-        s3 = boto3.client("s3", region_name="eu-north-1")
+        s3 = boto3.client(
+            "s3",
+            region_name=settings.AWS_S3_REGION_NAME,
+        )
 
         try:
             response = s3.get_object(
-                Bucket="fundflow-bhagvat-storage-2026-unique",
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
                 Key="fundflow/nav/mutual_fund_nav.csv",
             )
             df = pd.read_csv(BytesIO(response["Body"].read()))
